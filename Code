@@ -1,0 +1,55 @@
+const int soundPin = A0;
+const int ledPin = D1;        // LED pin added
+
+const int sampleWindow = 50;  // milliseconds
+const float dbThreshold = 60.0; // Adjust this threshold as needed
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+}
+
+void loop() {
+
+  unsigned long startTime = millis();
+
+  int signalMax = 0;
+  int signalMin = 1023;
+
+  while (millis() - startTime < sampleWindow) {
+
+    int sample = analogRead(soundPin);
+
+    if (sample < 1023) {
+      if (sample > signalMax) {
+        signalMax = sample;
+      }
+
+      if (sample < signalMin) {
+        signalMin = sample;
+      }
+    }
+  }
+
+  int peakToPeak = signalMax - signalMin;
+
+  // Convert signal amplitude to approximate dB
+  float voltage = (peakToPeak * 3.3) / 1023.0;
+
+  float dB = 20.0 * log10(voltage / 0.001);
+
+  Serial.print("Sound Level: ");
+  Serial.print(dB);
+  Serial.println(" dB");
+
+  // LED control based on sound level
+  if (dB > dbThreshold) {
+    digitalWrite(ledPin, HIGH);
+    Serial.println("Loud sound detected! LED ON");
+  } else {
+    digitalWrite(ledPin, LOW);
+  }
+
+  delay(500);
+}
